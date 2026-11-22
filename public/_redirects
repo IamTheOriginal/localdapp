@@ -1,0 +1,3 @@
+# SPA fallback for Cloudflare Pages — static files (assets/*, starters/*, etc.)
+# always take precedence over this rule; unknown routes return index.html with HTTP 200.
+/* /index.html 200

@@ -1,0 +1,48 @@
+# Always-on headless runtime ("keeper node") — docs/HEADLESS.md
+#
+#   docker build -f Dockerfile.headless -t dapp-keeper .
+#   docker run -d --name keeper -p 8788:8788 -v keeper-data:/data \
+#     -e SIGNALING_URLS=wss://signal.example.com dapp-keeper
+#
+# The control surface binds 0.0.0.0 INSIDE the container, which is only as open
+# as the port you publish: `-p 127.0.0.1:8788:8788` keeps it on the host. With
+# `network_mode: host` nothing is published, so set HEADLESS_HOST=127.0.0.1 and
+# put a TLS-terminating reverse proxy in front.
+# The bearer token lands in /data/config.json and travels in clear text over
+# plain http, so anything wider than loopback wants that proxy.
+#
+# The process runs as the image's unprivileged `node` user (uid 1000). /data is
+# the keeper's identity and every dapp it holds, so hand the mounted directory
+# to that uid (`chown -R 1000:1000 <data dir>`) when coming from an older image
+# that ran as root.
+
+FROM node:25-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+# node-datachannel ships linux prebuilds, so no toolchain is needed here.
+# `npm install` instead of `npm ci`: node-datachannel 0.33.1 references
+# @node-datachannel/android-arm64@0.33.1, which was never published — modern
+# npm's `ci` hard-fails on the unsatisfiable optional dep, `install` skips it.
+RUN npm install --omit=dev --no-audit --no-fund
+
+COPY src ./src
+# Code App SDK docs: the system prompt for AI dapp generation (src/headless/dappGenerator.ts).
+COPY docs/code-apps ./docs/code-apps
+COPY server ./server
+
+ENV NODE_ENV=production \
+    HEADLESS_DATA_DIR=/data \
+    HEADLESS_HOST=0.0.0.0 \
+    HEADLESS_PORT=8788
+
+# Created here so a fresh named volume belongs to `node`; a bind mount keeps the
+# host's ownership, which is why the note at the top asks for the chown.
+RUN mkdir -p /data && chown node:node /data
+USER node
+
+VOLUME /data
+EXPOSE 8788
+
+CMD ["node", "server/headless.mjs"]

@@ -1,0 +1,57 @@
+name = "app"
+main = "src/index.mjs"
+compatibility_date = "2026-03-01"
+
+# Static SPA assets served directly from the Cloudflare edge (€0, zero Worker
+# invocations for static files). Dynamic routes invoke the Worker first.
+[assets]
+directory = "../../dist"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "single-page-application"
+run_worker_first = ["/signaling", "/ice", "/health", "/healthz"]
+
+[durable_objects]
+bindings = [
+  { name = "SIGNALING_HUB", class_name = "SignalingHub" }
+]
+
+# SQLite-backed Durable Objects are included on the Workers Free plan ($0/month).
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SignalingHub"]
+
+# Optional: uncomment only if you enable shared Cloudflare Realtime TURN + CF_ANALYTICS_TOKEN.
+# Leaving TURN off guarantees €0.00 cost at any traffic level (STUN-only + BYO TURN in Settings).
+# [triggers]
+# crons = ["*/15 * * * *"]
+
+[vars]
+# Comma-separated browser origins allowed to request /ice (empty = allow any origin).
+ALLOWED_ORIGINS = ""
+# Abuse limits (matching server/signaling.mjs defaults)
+MAX_TOPICS_PER_CONNECTION = "512"
+MAX_MESSAGE_BYTES = "131072"
+MAX_MESSAGES_PER_SECOND = "100"
+MESSAGE_BURST = "1000"
+MAX_CONNECTIONS_PER_IP = "64"
+# Ephemeral TURN credential lifetime in seconds (1800 = 30 min; short TTL bounds burst overshoot)
+TURN_TTL_SECONDS = "1800"
+# Monthly free TURN allowance per verified device key (10 MiB across all rooms)
+TURN_USER_MONTHLY_LIMIT_BYTES = "10485760"
+# Anti-Sybil monthly cap per subscriber IP prefix (/24 IPv4, /64 IPv6)
+TURN_IP_MONTHLY_LIMIT_BYTES = "26214400"
+# Account-wide monthly TURN warning (800 GB = 80%) and hard kill-switch (950 GB = 95% of 1,000 GB free tier)
+TURN_ACCOUNT_WARN_BYTES = "800000000000"
+TURN_ACCOUNT_HARD_CAP_BYTES = "950000000000"
+# Cloudflare Account ID (non-secret; paired with secret CF_ANALYTICS_TOKEN for GraphQL TURN sync)
+CF_ACCOUNT_ID = ""
+# Max /ice credential requests per client IP per hour
+ICE_RATE_LIMIT_PER_HOUR = "30"
+
+# Secrets (set with `npx wrangler secret put <NAME>`, never commit them):
+#   TURN_KEY_ID            — Cloudflare Realtime TURN Key ID (1 TB/month free)
+#   TURN_KEY_API_TOKEN     — Cloudflare Realtime TURN API token
+#   CF_ANALYTICS_TOKEN     — Read-only Cloudflare API token (Account Analytics: Read) for 15-min quota sync
+#   TURN_ALERT_WEBHOOK_URL — Optional webhook URL (e.g. ntfy.sh / Discord / Slack) for 800 GB & 950 GB alerts
+#   ICE_ACCESS_TOKEN       — Optional bearer token for headless keeper when ALLOWED_ORIGINS is set

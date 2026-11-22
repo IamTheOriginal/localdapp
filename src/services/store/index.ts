@@ -1,0 +1,166 @@
+import { getRootDoc, getRootPersistence, getDappsList, getDappDoc, getDappPersistence, getInviteDoc, getLobbyProvider, getDappLobbyId, initDappDoc, inviteDocs, inviteProviders, getDappSourceDoc, getDappSourcePersistence, getDappCredentials, updateDappCredentials, reconnectDappProviders, archiveDappCatalogEntry, disconnectDappNetwork } from './docs.ts';
+import { rotateDappCredentials, applyPendingRekey, setupRekeyObserver } from './rotation.ts';
+import { CURRENT_DAPP_DOC_VERSION, getDappDocVersion, runDappDocMigrations } from './migrations.ts';
+import { addFileRecord, listFileRecords, getFileRecord, deleteFileRecord } from './files.ts';
+import { createDapp, joinDapp, addDappByCredentials, getDappConfig, seedDappSchema, syncManifestEntities, syncManifestMeta, updateDappTheme } from './config.ts';
+import { getCodeAppFile, getCodeAppFiles, setCodeAppFile, createCodeAppFile, renameCodeAppFile, deleteCodeAppFile, normalizeCodeAppFilePath, initializeCodeAppSource, replaceCodeAppFiles, validateCodeAppFiles, DEFAULT_CODE_APP_HTML, DEFAULT_CODE_APP_MANIFEST_YAML } from './source.ts';
+import { assertDefinitionOnlyBundle, computeDefinitionManifestVersion, exportDefinitionBundle, importDefinitionBundle, replaceDefinitionBundle, verifyDefinitionBundle } from './definitionBundle.ts';
+import { createStarterDapp, fetchStarterCatalog, fetchStarterDefinition, parseStarterCatalog, validateStarterDefinition } from './starters.ts';
+import { applyGithubUpdate, createGithubDapp, diffGithubSnapshot, disconnectGithubOrigin, getGithubOrigin, observeGithubOrigin } from './githubOrigin.ts';
+import { getCodeAppData, getCodeAppDataSnapshot, setCodeAppData, deleteCodeAppData, appendIncomingShare, INCOMING_SHARES_KEY } from './codeData.ts';
+import { createInvite, appInviteUri, deleteInvite, approveLobbyDevice, autoApproveLobbyPeers } from './invites.ts';
+import { getEntityRecords, addRecord, updateRecord, deleteRecord } from './data.ts';
+import { requireRole, signRecord, setupAuthObserver } from './auth.ts';
+import { setMember, removeMember, leaveDappMembership } from './members.ts';
+import { createPerson, updatePerson, deletePerson, getPerson, listPeople } from './people.ts';
+import { createRelationship, updateRelationshipStatus, setRelationshipPeer, completeRelationshipPairing, deleteRelationship, getRelationship, listRelationships, compareAndSetRelationshipControlCapability, getRelationshipControlCapability } from './relationships.ts';
+import { createChannelDescriptor, registerChannelDescriptor, installChannelDescriptor, getChannelDescriptor, listChannelDescriptors, activateChannelDescriptor, revokeChannelDescriptor, admitChannelDevice, removeChannelDevice } from './channelRegistry.ts';
+import { createDirectBinding, deleteDirectBinding, listDirectBindings, listDirectDeliveries, pauseDirectBinding, resumeDirectBinding } from './directBindings.ts';
+import { assignAppRole, clearAppRole, getAppRole, listAppRoleAssignments } from './roles.ts';
+import { buildHomeLayout, flattenHomeOrder, readCatalogItems, readFolders, readHomeLayout, homeNodeId, stepTarget, moveDapp, moveFolder, createFolderFromDapps, renameFolder, ungroupFolder, pruneFolders, nextTopLevelSortOrder, FOLDER_NAME_MAX } from './homeLayout.ts';
+
+export {
+  getRootDoc,
+  getRootPersistence,
+  getDappsList,
+  getDappDoc,
+  getDappPersistence,
+  getInviteDoc,
+  getLobbyProvider,
+  getDappLobbyId,
+  initDappDoc,
+  inviteDocs,
+  inviteProviders,
+  getDappSourceDoc,
+  getDappSourcePersistence,
+  getDappCredentials,
+  updateDappCredentials,
+  reconnectDappProviders,
+  archiveDappCatalogEntry,
+  disconnectDappNetwork,
+  rotateDappCredentials,
+  applyPendingRekey,
+  setupRekeyObserver,
+  CURRENT_DAPP_DOC_VERSION,
+  getDappDocVersion,
+  runDappDocMigrations,
+  addFileRecord,
+  listFileRecords,
+  getFileRecord,
+  deleteFileRecord,
+
+  createDapp,
+  joinDapp,
+  addDappByCredentials,
+  getDappConfig,
+  seedDappSchema,
+  syncManifestEntities,
+  syncManifestMeta,
+  updateDappTheme,
+
+  getCodeAppFile,
+  getCodeAppFiles,
+  setCodeAppFile,
+  createCodeAppFile,
+  renameCodeAppFile,
+  deleteCodeAppFile,
+  normalizeCodeAppFilePath,
+  initializeCodeAppSource,
+  replaceCodeAppFiles,
+  validateCodeAppFiles,
+  DEFAULT_CODE_APP_HTML,
+  DEFAULT_CODE_APP_MANIFEST_YAML,
+  assertDefinitionOnlyBundle,
+  computeDefinitionManifestVersion,
+  exportDefinitionBundle,
+  importDefinitionBundle,
+  replaceDefinitionBundle,
+  verifyDefinitionBundle,
+  createStarterDapp,
+  fetchStarterCatalog,
+  fetchStarterDefinition,
+  parseStarterCatalog,
+  validateStarterDefinition,
+  applyGithubUpdate,
+  createGithubDapp,
+  diffGithubSnapshot,
+  disconnectGithubOrigin,
+  getGithubOrigin,
+  observeGithubOrigin,
+  getCodeAppData,
+  getCodeAppDataSnapshot,
+  setCodeAppData,
+  deleteCodeAppData,
+  appendIncomingShare,
+  INCOMING_SHARES_KEY,
+  
+  createInvite,
+  appInviteUri,
+  deleteInvite,
+  approveLobbyDevice,
+  autoApproveLobbyPeers,
+  
+  
+  getEntityRecords,
+  addRecord,
+  updateRecord,
+  deleteRecord,
+
+  requireRole,
+  signRecord,
+  setupAuthObserver,
+  setMember,
+  removeMember,
+  leaveDappMembership,
+
+  createPerson,
+  updatePerson,
+  deletePerson,
+  getPerson,
+  listPeople,
+  createRelationship,
+  updateRelationshipStatus,
+  setRelationshipPeer,
+  completeRelationshipPairing,
+  deleteRelationship,
+  getRelationship,
+  listRelationships,
+  compareAndSetRelationshipControlCapability,
+  getRelationshipControlCapability,
+  createChannelDescriptor,
+  registerChannelDescriptor,
+  installChannelDescriptor,
+  getChannelDescriptor,
+  listChannelDescriptors,
+  activateChannelDescriptor,
+  revokeChannelDescriptor,
+  admitChannelDevice,
+  removeChannelDevice,
+  createDirectBinding,
+  deleteDirectBinding,
+  listDirectBindings,
+  listDirectDeliveries,
+  pauseDirectBinding,
+  resumeDirectBinding,
+
+  assignAppRole,
+  clearAppRole,
+  getAppRole,
+  listAppRoleAssignments,
+
+  buildHomeLayout,
+  flattenHomeOrder,
+  readCatalogItems,
+  readFolders,
+  readHomeLayout,
+  homeNodeId,
+  stepTarget,
+  moveDapp,
+  moveFolder,
+  createFolderFromDapps,
+  renameFolder,
+  ungroupFolder,
+  pruneFolders,
+  nextTopLevelSortOrder,
+  FOLDER_NAME_MAX,
+};

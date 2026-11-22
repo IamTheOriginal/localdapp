@@ -1,0 +1,37 @@
+# Keeper Control — the operator console for an always-on keeper device.
+# All communication happens through $store collections; this app never
+# touches the network directly (no permissions are declared).
+name: Keeper Control
+icon: 🛰️
+color: '#0ea5e9'
+
+routes:
+  - path: /
+    label: Keeper
+    icon: dashboard
+
+entities:
+  - id: commands
+    name: Commands
+    icon: 🛰️
+    color: '#0ea5e9'
+    fields:
+      - id: type
+        name: Type
+        type: text
+        required: true
+      - id: status
+        name: Status
+        type: text
+        required: true
+      - id: error
+        name: Error
+        type: text
+  - id: keeper
+    name: Keeper
+    icon: 🛰️
+    color: '#0ea5e9'
+    fields:
+      - id: displayName
+        name: Display name
+        type: text

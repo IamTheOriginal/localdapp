@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Keeper Control</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div>
+        <h1>🛰️ Keeper Control</h1>
+        <p id="keeper-name" class="muted">Waiting for keeper…</p>
+      </div>
+      <div class="hero-status">
+        <span id="last-update" class="pill">no report yet</span>
+      </div>
+    </header>
+
+    <div id="stale-banner" class="banner warning" hidden>Keeper not reporting — the last status update is more than 3 minutes old.</div>
+    <div id="operator-banner" class="banner warning" hidden>This device is not an operator — commands from it are ignored.</div>
+
+    <section class="card" id="join-card">
+      <h2>Join a dapp</h2>
+      <div class="row">
+        <input id="invite-input" type="text" class="grow" placeholder="Invite link or code" maxlength="2048">
+        <button id="join-btn" type="button">Join</button>
+      </div>
+      <div id="join-status" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="ai-card">
+      <h2>AI</h2>
+      <h3>Model</h3>
+      <div class="row">
+        <select id="ai-model-select" class="grow" aria-label="Model"></select>
+        <button id="ai-use-model-btn" type="button" class="secondary">Use model</button>
+      </div>
+      <div id="ai-model-meta" class="muted small-text"></div>
+      <div id="ai-model-status" class="status" aria-live="polite"></div>
+
+      <h3>Target</h3>
+      <div class="row">
+        <select id="ai-target-select" class="grow" aria-label="Target dapp"></select>
+      </div>
+      <div id="ai-new-dapp-fields" class="stack" hidden>
+        <label>Name<input id="ai-new-name" type="text" maxlength="80" placeholder="Optional"></label>
+        <label>Icon<input id="ai-new-icon" type="text" maxlength="4" placeholder="🧩"></label>
+        <label>Color<input id="ai-new-color" type="color" value="#0ea5e9"></label>
+      </div>
+
+      <textarea id="ai-prompt" rows="4" placeholder="Describe the app you want, or the change to make…"></textarea>
+      <div class="row">
+        <button id="ai-submit-btn" type="button">Generate</button>
+      </div>
+      <div id="ai-status" class="status" aria-live="polite"></div>
+
+      <div id="ai-revisions-wrap" hidden>
+        <h3>Revisions</h3>
+        <div id="ai-revisions-empty" class="empty" hidden>No revisions yet.</div>
+        <div id="ai-revisions-list" class="stack"></div>
+      </div>
+    </section>
+
+    <section class="card" id="dapps-card">
+      <h2>Dapps</h2>
+      <div id="dapps-empty" class="empty" hidden>No dapps reported yet.</div>
+      <div class="table-scroll">
+        <table id="dapps-table" hidden>
+          <thead>
+            <tr>
+              <th>App</th>
+              <th>Role</th>
+              <th>Sync</th>
+              <th>Peers</th>
+              <th>Members</th>
+              <th>Replication</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dapps-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="automations-card">
+      <h2>Automations</h2>
+      <div id="automations-empty" class="empty" hidden>No automation rules yet.</div>
+      <div id="automations-list" class="stack"></div>
+
+      <h3>Add or replace rule (JSON)</h3>
+      <textarea id="rule-json" rows="12" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="put-rule-btn" type="button">Save rule</button>
+      </div>
+      <div id="rule-status" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="integrations-card">
+      <h2>Integrations</h2>
+      <div id="integrations-list" class="stack"></div>
+    </section>
+
+    <section class="card" id="operators-card">
+      <h2>Operators</h2>
+      <div id="operator-notice" class="status error" hidden>This device is not an operator — commands from it are ignored.</div>
+      <div id="operators-empty" class="empty" hidden>No operator devices reported yet.</div>
+      <ul id="operators-list" class="plain-list"></ul>
+    </section>
+
+    <section class="card" id="commands-card">
+      <h2>Commands</h2>
+      <div id="commands-empty" class="empty" hidden>No commands sent yet.</div>
+      <div id="commands-list" class="stack"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
